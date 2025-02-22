@@ -55,10 +55,15 @@ function mergeObjects(objects) {
  *    removeProperties({name: 'John', age: 30, city: 'New York'}, ['age']) => {name: 'John', city: 'New York'}
  *
  */
-const removeProperties = (obj, keys) =>
-  Object.fromEntries(
-    Object.entries(obj).filter(([key]) => !keys.includes(key))
-  );
+const removeProperties = (obj, keys) => {
+  const copyObj = shallowCopy(obj);
+
+  keys.forEach((key) => {
+    delete copyObj[key];
+  });
+
+  return copyObj;
+};
 
 /**
  * Compares two source objects. Returns true if the objects are equal and false otherwise.
