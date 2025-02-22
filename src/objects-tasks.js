@@ -346,32 +346,95 @@ function group(array, keySelector, valueSelector) {
  */
 
 const cssSelectorBuilder = {
-  element(/* value */) {
-    throw new Error('Not implemented');
+  selector: '',
+  order: [],
+
+  checkOrder(type) {
+    const orderMap = {
+      element: 1,
+      id: 2,
+      class: 3,
+      attribute: 4,
+      pseudoClass: 5,
+      pseudoElement: 6,
+    };
+
+    if (
+      (type === 'element' || type === 'id' || type === 'pseudoElement') &&
+      this.order.includes(orderMap[type])
+    ) {
+      throw new Error(
+        'Element, id and pseudo-element should not occur more then one time inside the selector'
+      );
+    }
+
+    if (this.order.length && orderMap[type] < Math.max(...this.order)) {
+      throw new Error(
+        'Selector parts should be arranged in the following order: element, id, class, attribute, pseudo-class, pseudo-element'
+      );
+    }
+
+    this.order.push(orderMap[type]);
   },
 
-  id(/* value */) {
-    throw new Error('Not implemented');
+  clone() {
+    const obj = Object.create(this);
+    obj.selector = this.selector;
+    obj.order = [...this.order];
+    return obj;
   },
 
-  class(/* value */) {
-    throw new Error('Not implemented');
+  element(value) {
+    const obj = this.clone();
+    obj.selector = this.selector + value;
+    obj.checkOrder('element');
+    return obj;
   },
 
-  attr(/* value */) {
-    throw new Error('Not implemented');
+  id(value) {
+    const obj = this.clone();
+    obj.selector = `${this.selector}#${value}`;
+    obj.checkOrder('id');
+    return obj;
   },
 
-  pseudoClass(/* value */) {
-    throw new Error('Not implemented');
+  class(value) {
+    const obj = this.clone();
+    obj.selector = `${this.selector}.${value}`;
+    obj.checkOrder('class');
+    return obj;
   },
 
-  pseudoElement(/* value */) {
-    throw new Error('Not implemented');
+  attr(value) {
+    const obj = this.clone();
+    obj.selector = `${this.selector}[${value}]`;
+    obj.checkOrder('attribute');
+    return obj;
   },
 
-  combine(/* selector1, combinator, selector2 */) {
-    throw new Error('Not implemented');
+  pseudoClass(value) {
+    const obj = this.clone();
+    obj.selector = `${this.selector}:${value}`;
+    obj.checkOrder('pseudoClass');
+    return obj;
+  },
+
+  pseudoElement(value) {
+    const obj = this.clone();
+    obj.selector = `${this.selector}::${value}`;
+    obj.checkOrder('pseudoElement');
+    return obj;
+  },
+
+  combine(selector1, combinator, selector2) {
+    const obj = this.clone();
+    obj.selector = `${selector1.stringify()} ${combinator} ${selector2.stringify()}`;
+    obj.order = [];
+    return obj;
+  },
+
+  stringify() {
+    return this.selector;
   },
 };
 
